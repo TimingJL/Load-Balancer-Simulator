@@ -3,6 +3,9 @@
 import pika
 import scheduler
 import parameter
+import redis
+
+r = redis.StrictRedis(host='localhost', port=6379, db=0)
 
 credentials = pika.PlainCredentials(parameter.rabbitmq_username, parameter.rabbitmq_password)
 connection = pika.BlockingConnection(pika.ConnectionParameters(host=parameter.rabbitmq_host,port = 5672, virtual_host = parameter.rabbitmq_vhost, credentials = credentials))
@@ -18,10 +21,12 @@ for i in range(len(cm_list)):
 
 print ' [*] Waiting for messages. To exit press CTRL+C'
 
+
 def callback(ch, method, properties, body):
     #print " [x] Received %r" % (body,)
     scheduler.mRR(body, cm_list)
     #scheduler.mRandom(body, cm_list)
+    #scheduler.mJSQ(body, cm_list)
 
 
 channel.basic_consume(callback,
