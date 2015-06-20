@@ -25,9 +25,10 @@ channel = connection.channel()
 
 #task generator 
 a, m = 1., 1. # shape and mode
+i = 1
 while True:
     #poisson
-    t = nextTime(1/0.5)
+    t = nextTime(1/0.4)
 
     #numpy.random.pareto
     #http://docs.scipy.org/doc/numpy/reference/generated/numpy.random.pareto.html
@@ -37,4 +38,5 @@ while True:
     channel.basic_publish(exchange='LB',
                       routing_key='',
                       body=str(s[0]))
-    print s[0]
+    print '[%r]random pareto job size: %r' % (i, s[0])
+    i = i+1
