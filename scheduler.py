@@ -22,18 +22,35 @@ def mRR(task, cm_list):
                   properties=pika.BasicProperties(
                      delivery_mode = 2, # make message persistent
                   ))
-  print i
+  print 'send to cm_0%r' % (i+1)
   i = (i + 1) % len(cm_list)  
   r.set('count', i)
 
 
-
 def mRandom(task, cm_list):
-	r = random.randint(0,len(cm_list)-1)
+	ran = random.randint(0,len(cm_list)-1)
 	
-	channel.basic_publish(exchange=cm_list[r],
-                  routing_key=cm_list[r],
+	channel.basic_publish(exchange=cm_list[ran],
+                  routing_key=cm_list[ran],
                   body=task,
                   properties=pika.BasicProperties(
                      delivery_mode = 2, # make message persistent
                   ))
+
+
+# Join the Shortest Queue(fewest number of jobs)
+def mJSQ(task, cm_list):
+  queue_index = 0
+  min_queue_length = int(r.get(cm_list[queue_index]))
+  min_queue_ID = cm_list[queue_index]
+  for item in cm_list:
+    if int(r.get(item)) < min_queue_length:
+      min_queue_ID = item
+      min_queue_length = int(r.get(min_queue_ID))
+
+  channel.basic_publish(exchange=min_queue_ID,
+                routing_key=min_queue_ID,
+                body=task,
+                properties=pika.BasicProperties(
+                    delivery_mode = 2, # make message persistent
+                ))
