@@ -8,6 +8,7 @@ import random
 import time
 import parameter
 import numpy as np
+import json
 
 
 #Generate Random Timings for a Poisson Process
@@ -34,9 +35,10 @@ while True:
     #http://docs.scipy.org/doc/numpy/reference/generated/numpy.random.pareto.html
     s = np.random.pareto(a, 1) + m #generate pareto job size
     time.sleep(t)#sleep poisson distribution
-
+    message = {"ID":i,"job_size":s[0]}
     channel.basic_publish(exchange='LB',
                       routing_key='',
-                      body=str(s[0]))
-    print '[%r]random pareto job size: %r' % (i, s[0])
+                      body=str(message))
+    print '[%r]random pareto job size: %r' % (message["ID"], message["job_size"])
+    print 'str(message): %r\n' %(str(message))
     i = i+1
