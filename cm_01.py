@@ -8,7 +8,7 @@ from collections import deque
 from threading import Thread
 import parameter
 import redis
-
+import ast
 
 
 credentials = pika.PlainCredentials(parameter.rabbitmq_username, parameter.rabbitmq_password)
@@ -24,23 +24,41 @@ r.set(queue_name, 0)
 channel.queue_declare(queue=queue_name, durable=True)
 print ' [*] Waiting for messages. To exit press CTRL+C'
 
-
+#receive jobs from queue and output jobs from server
 def out():
-    while True:        
-        if msg_queue:          
-            s = float(msg_queue.popleft()[0])
+    while True:
+        if msg_queue:
+            message = ast.literal_eval(msg_queue.popleft())
+            #s = float(msg_queue.popleft()[0])
+            out_Queue_time = time.time()
+
+            r.set(queue_name, len(msg_queue))#log queue length
+            
+            time.sleep(message["job_size"])#service time
+
+            out_Server_time = time.time()
+            message.setdefault("out_Queue_time",out_Queue_time)
+            message.setdefault("out_Server_time",out_Server_time)
+            queueing_time = float(out_Queue_time) - float(message["in_Queue_time"])
+            message.setdefault("queueing_time",queueing_time)
+            response_time = float(out_Server_time) - float(message["in_Queue_time"])
+            message.setdefault("response_time",response_time)
+            r.set(message["ID"],message)
+
             print ' pop'
-            print 'msg_queue: %r' %(msg_queue)
-            r.set(queue_name, len(msg_queue))  
+            print 'out message: %r' % (r.get(message["ID"]))
+            print 'remain in msg_queue: %r' %(msg_queue)
             print 'queue length: %r' %(r.get(queue_name))
             print '\n\n'
-            
-            time.sleep(s)
  
 
+#receive jobs from load balancer
+def callback(ch, method, properties, body):     
+    message = ast.literal_eval(body)
+    in_Queue_time = time.time()
+    message.setdefault("in_Queue_time", in_Queue_time)
+    msg_queue.append(str(message))
 
-def callback(ch, method, properties, body):
-    msg_queue.append(body)
     ch.basic_ack(delivery_tag = method.delivery_tag)
     r.set(queue_name, len(msg_queue))
 
