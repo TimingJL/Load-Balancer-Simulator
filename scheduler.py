@@ -14,6 +14,7 @@ connection = pika.BlockingConnection(pika.ConnectionParameters(host=parameter.ra
 channel = connection.channel()
 
 def mRR(task, cm_list):
+  r.set('scheduler_mode', 'Round-Robin')
   i = int(r.get('count'))
   #i = 1 #test var
   channel.basic_publish(exchange=cm_list[i],
@@ -23,14 +24,15 @@ def mRR(task, cm_list):
                      delivery_mode = 2, # make message persistent
                   ))
   print 'send to cm_0%r' % (i+1)
-  i = (i + 1) % len(cm_list)  
+  i = (i + 1) % len(cm_list)
   r.set('count', i)
 
 
 def mRandom(task, cm_list):
-	ran = random.randint(0,len(cm_list)-1)
-	
-	channel.basic_publish(exchange=cm_list[ran],
+  r.set('scheduler_mode', 'Random')
+  ran = random.randint(0,len(cm_list)-1)
+
+  channel.basic_publish(exchange=cm_list[ran],
                   routing_key=cm_list[ran],
                   body=task,
                   properties=pika.BasicProperties(
@@ -40,6 +42,7 @@ def mRandom(task, cm_list):
 
 # Join the Shortest Queue(fewest number of jobs)
 def mJSQ(task, cm_list):
+  r.set('scheduler_mode', 'JSQ (Join the Shortest Queue)')
   queue_index = 0
   min_queue_length = int(r.get(cm_list[queue_index]))
   min_queue_ID = cm_list[queue_index]

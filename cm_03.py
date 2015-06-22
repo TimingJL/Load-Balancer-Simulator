@@ -19,7 +19,7 @@ queue_name = 'cm_03'
 msg_queue = deque([])
 
 r = redis.StrictRedis(host='localhost', port=6379, db=0)
-r.set(queue_name, 0)
+r.set(queue_name, 0)#clear queue length
 
 channel.queue_declare(queue=queue_name, durable=True)
 print ' [*] Waiting for messages. To exit press CTRL+C'
@@ -40,9 +40,11 @@ def out():
             message.setdefault("out_Queue_time",out_Queue_time)
             message.setdefault("out_Server_time",out_Server_time)
             queueing_time = float(out_Queue_time) - float(message["in_Queue_time"])
+
             message.setdefault("queueing_time",queueing_time)
             response_time = float(out_Server_time) - float(message["in_Queue_time"])
             message.setdefault("response_time",response_time)
+            message["isFinished"] = '1'
             r.set(message["ID"],message)
 
             print ' pop'

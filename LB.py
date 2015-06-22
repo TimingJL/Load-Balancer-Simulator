@@ -24,9 +24,9 @@ print ' [*] Waiting for messages. To exit press CTRL+C'
 
 def callback(ch, method, properties, body):
     #print " [x] Received %r" % (body,)
-    scheduler.mRR(body, cm_list)
+    #scheduler.mRR(body, cm_list)
     #scheduler.mRandom(body, cm_list)
-    #scheduler.mJSQ(body, cm_list)
+    scheduler.mJSQ(body, cm_list)
 
 
 channel.basic_consume(callback,
