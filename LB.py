@@ -23,14 +23,18 @@ print ' [*] Waiting for messages. To exit press CTRL+C'
 
 
 def callback(ch, method, properties, body):
-    #print " [x] Received %r" % (body,)
     #scheduler.mRR(body, cm_list)
     #scheduler.mRandom(body, cm_list)
     scheduler.mJSQ(body, cm_list)
+    ch.basic_ack(method.delivery_tag)
+    #scheduler.mJSWQ(body,cm_list)
 
 
+# channel.basic_consume(callback,
+#                       queue='LBQ',
+#                       no_ack=True)
+channel.basic_qos(prefetch_count=2000)
 channel.basic_consume(callback,
-                      queue='LBQ',
-                      no_ack=True)
+                      queue='LBQ')
 
 channel.start_consuming()
